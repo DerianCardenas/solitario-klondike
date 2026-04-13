@@ -1,0 +1,27 @@
+# Entorno virtual
+venv/
+
+# PyInstaller
+build/
+dist/
+*.spec.bak
+
+# Paquete .deb y carpeta de construcción
+*.deb
+solitario-klondike_*/
+
+# Partidas guardadas (datos locales del usuario)
+saves/autosave.json
+
+# Caché de Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Archivos internos de herramientas
+.abacus.donotdelete
+.claude/

@@ -1,0 +1,9 @@
+{
+  "name": "Minimalista",
+  "description": "Tema limpio y minimalista con tonos tierra suaves.",
+  "background": [240, 237, 230],
+  "card_front": [255, 255, 255],
+  "card_back": [180, 175, 165],
+  "card_back_pattern": [165, 160, 150],
+  "card_back_style": "plain"
+}

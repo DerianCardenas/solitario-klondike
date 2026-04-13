@@ -1,0 +1,9 @@
+{
+  "name": "Clásico",
+  "description": "Tema clásico verde con estilo tradicional de casino.",
+  "background": [34, 120, 60],
+  "card_front": [255, 255, 255],
+  "card_back": [30, 60, 150],
+  "card_back_pattern": [20, 45, 120],
+  "card_back_style": "crosshatch"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "Moderno",
+  "description": "Tema moderno con paleta Nord. Colores fríos y elegantes.",
+  "background": [45, 52, 64],
+  "card_front": [248, 248, 248],
+  "card_back": [94, 129, 172],
+  "card_back_pattern": [76, 110, 155],
+  "card_back_style": "gradient"
+}
