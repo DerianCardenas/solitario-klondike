@@ -12,6 +12,7 @@ Juego de solitario Klondike completo desarrollado en Python con Pygame.
 - Clic derecho para enviar directamente a la fundación
 - Auto-resolver cuando todas las cartas están visibles
 - 3 temas visuales: Clásico, Moderno, Minimalista
+- Imagen de reverso personalizada (PNG, JPG, JPEG, BMP) desde Configuración → Reverso
 - 5 niveles de dificultad
 - Deshacer movimientos (Ctrl+Z)
 - Guardado automático de partidas

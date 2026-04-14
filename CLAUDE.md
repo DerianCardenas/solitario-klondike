@@ -141,5 +141,14 @@ Los iconos se cargan desde `assets/{suit}.png` (hearts, diamonds, clubs, spades)
 - Elimina los repartos con los 4 Ases enterrados (era el 2.1% de las partidas con el shuffle puro).
 - La aleatoriedad se mantiene prácticamente intacta.
 
+### Imagen de reverso personalizada (theme.py + game_gui.py)
+- Nueva tab "Reverso" en Configuración con selector de archivo nativo (tkinter).
+- Soporta PNG, JPG, JPEG, BMP.
+- La ruta se persiste en `saves/config.json` como `card_back_path`.
+- `Theme.set_custom_card_back(path)` aplica la imagen con prioridad sobre la del tema.
+- `Theme.clear_custom_card_back()` vuelve al reverso del tema activo.
+- La imagen se escala automáticamente al tamaño de carta (85×125 px) en `_render_card_back()`.
+- Preview en tiempo real visible en la misma pantalla de configuración.
+
 ### Bug en undo (game_logic.py)
 - `undo()` sumaba `self.moves += 1` al deshacer en vez de restar. Corregido a `self.moves = max(0, self.moves - 1)`.

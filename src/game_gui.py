@@ -33,7 +33,8 @@ class SolitaireGUI:
 
         # Configuración persistente
         self.config = self._load_config()
-        self.theme = Theme(self.config.get('theme', 'classic'))
+        self.theme = Theme(self.config.get('theme', 'classic'),
+                           custom_card_back_path=self.config.get('card_back_path'))
         self.card_renderer = CardRenderer(self.theme)
         self.ui = UIRenderer(self.theme)
 
@@ -50,6 +51,7 @@ class SolitaireGUI:
         self.hover_button = None
         self.menu_selection = 0
         self.settings_tab = 'difficulty'
+        self._card_back_error = ''   # mensaje de error al cargar imagen
 
         # Layout positions (calculadas al inicio)
         self._calc_layout()
@@ -108,6 +110,39 @@ class SolitaireGUI:
         self.config['theme'] = name
         self._save_config()
 
+    def _change_card_back(self, path):
+        """Aplica una imagen de reverso personalizada."""
+        self._card_back_error = ''
+        try:
+            import pygame as _pg
+            # Validar que pygame puede cargar la imagen
+            test = _pg.image.load(path)
+            self.theme.set_custom_card_back(path)
+            self.card_renderer.reload_theme(self.theme)
+            self.config['card_back_path'] = path
+            self._save_config()
+        except Exception as e:
+            self._card_back_error = f'No se pudo cargar la imagen'
+
+    def _clear_card_back(self):
+        """Elimina el reverso personalizado y vuelve al del tema."""
+        self.theme.clear_custom_card_back()
+        self.card_renderer.reload_theme(self.theme)
+        self.config.pop('card_back_path', None)
+        self._card_back_error = ''
+        self._save_config()
+
+    def _open_file_dialog(self):
+        """Abre el explorador de archivos integrado para seleccionar una imagen."""
+        try:
+            from src.file_browser import FileBrowser
+            # El browser necesita dibujar sobre el display real, no el surface interno
+            browser = FileBrowser(self.display, self.theme)
+            path = browser.run()
+            if path:
+                self._change_card_back(path)
+        except Exception as e:
+            self._card_back_error = f'Error: {str(e)[:50]}'
     # ── Bucle principal ───────────────────────────────────────────────────
 
     def run(self):
@@ -505,6 +540,7 @@ class SolitaireGUI:
         for tab_name, rect in btns.get('tabs', {}).items():
             if rect.collidepoint(x, y):
                 self.settings_tab = tab_name
+                self._card_back_error = ''
                 return
         # Items
         for item_name, rect in btns.get('items', {}).items():
@@ -514,6 +550,14 @@ class SolitaireGUI:
                     self._save_config()
                 elif self.settings_tab == 'theme':
                     self._change_theme(item_name)
+                return
+        # Botones de reverso
+        if self.settings_tab == 'card_back':
+            if btns.get('btn_choose') and btns['btn_choose'].collidepoint(x, y):
+                self._open_file_dialog()
+                return
+            if btns.get('btn_clear') and btns['btn_clear'].collidepoint(x, y):
+                self._clear_card_back()
                 return
         # Back
         if btns.get('back') and btns['back'].collidepoint(x, y):
@@ -525,10 +569,10 @@ class SolitaireGUI:
         panel_w, panel_h = 700, 500
 
         # Tabs
-        tab_names = ['difficulty', 'theme']
-        tab_labels = {'difficulty': 'Dificultad', 'theme': 'Tema Visual'}
+        tab_names = ['difficulty', 'theme', 'card_back']
+        tab_labels = {'difficulty': 'Dificultad', 'theme': 'Tema Visual', 'card_back': 'Reverso'}
         for i, tn in enumerate(tab_names):
-            elements['tabs'][tn] = pygame.Rect(panel_x + 20 + i * 180, panel_y + 15, 160, 36)
+            elements['tabs'][tn] = pygame.Rect(panel_x + 20 + i * 160, panel_y + 15, 150, 36)
 
         # Items según tab
         item_y = panel_y + 80
@@ -539,6 +583,9 @@ class SolitaireGUI:
             themes = Theme.available_themes()
             for i, t_name in enumerate(themes):
                 elements['items'][t_name] = pygame.Rect(panel_x + 40, item_y + i * 55, panel_w - 80, 45)
+        elif self.settings_tab == 'card_back':
+            elements['btn_choose'] = pygame.Rect(panel_x + 40, item_y, 260, 44)
+            elements['btn_clear'] = pygame.Rect(panel_x + 320, item_y, 200, 44)
 
         elements['back'] = pygame.Rect(panel_x + panel_w - 120, panel_y + panel_h - 50, 100, 36)
         return elements
@@ -717,7 +764,7 @@ class SolitaireGUI:
 
         elements = self._get_settings_elements()
         mx, my = self.mouse_x, self.mouse_y
-        tab_labels = {'difficulty': 'Dificultad', 'theme': 'Tema Visual'}
+        tab_labels = {'difficulty': 'Dificultad', 'theme': 'Tema Visual', 'card_back': 'Reverso'}
 
         # Tabs
         for tab_name, rect in elements['tabs'].items():
@@ -756,10 +803,68 @@ class SolitaireGUI:
             self.ui.draw_text(self.screen, label, rect.x + 15, rect.y + 12,
                               color=txt_color, font=self.ui._font_small)
 
+        # Tab reverso de carta
+        if self.settings_tab == 'card_back':
+            self._draw_card_back_tab(elements, panel_x, panel_y, panel_w)
+
         # Botón volver
         if elements.get('back'):
             hover = elements['back'].collidepoint(mx, my)
             self.ui.draw_button(self.screen, elements['back'], "Volver", hover=hover)
+
+    def _draw_card_back_tab(self, elements, panel_x, panel_y, panel_w):
+        mx, my = self.mouse_x, self.mouse_y
+        item_y = panel_y + 80
+
+        # Botón elegir imagen
+        if elements.get('btn_choose'):
+            r = elements['btn_choose']
+            self.ui.draw_button(self.screen, r, "Elegir imagen...",
+                                hover=r.collidepoint(mx, my))
+
+        # Botón quitar
+        if elements.get('btn_clear'):
+            r = elements['btn_clear']
+            has_custom = bool(self.config.get('card_back_path'))
+            self.ui.draw_button(self.screen, r, "Quitar imagen",
+                                hover=r.collidepoint(mx, my), disabled=not has_custom)
+
+        # Mensaje de error
+        if self._card_back_error:
+            self.ui.draw_text(self.screen, self._card_back_error,
+                              panel_x + 40, item_y + 55,
+                              color=(220, 80, 80), font=self.ui._font_small)
+
+        # Ruta actual
+        path = self.config.get('card_back_path', '')
+        if path:
+            import os as _os
+            label = _os.path.basename(path)
+            self.ui.draw_text(self.screen, f"Actual: {label}",
+                              panel_x + 40, item_y + 55 if not self._card_back_error else item_y + 75,
+                              font=self.ui._font_small)
+        else:
+            self.ui.draw_text(self.screen, "Sin imagen personalizada (usando la del tema)",
+                              panel_x + 40, item_y + 55,
+                              font=self.ui._font_small)
+
+        # Preview del reverso actual
+        back_surf = self.card_renderer.get_back()
+        if back_surf:
+            preview_w, preview_h = 85, 125
+            preview_x = panel_x + panel_w - preview_w - 40
+            preview_y = item_y + 20
+            scaled = pygame.transform.smoothscale(back_surf, (preview_w, preview_h))
+            self.screen.blit(scaled, (preview_x, preview_y))
+            pygame.draw.rect(self.screen, self.theme['menu_border'],
+                             pygame.Rect(preview_x, preview_y, preview_w, preview_h), 2, border_radius=7)
+            self.ui.draw_text(self.screen, "Vista previa",
+                              preview_x + preview_w // 2, preview_y + preview_h + 6,
+                              font=self.ui._font_small, center=True)
+
+        # Formatos soportados
+        self.ui.draw_text(self.screen, "Formatos: PNG, JPG, JPEG, BMP",
+                          panel_x + 40, item_y + 110, font=self.ui._font_small)
 
     def _draw_win_overlay(self):
         # Overlay semi-transparente

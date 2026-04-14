@@ -85,10 +85,11 @@ BUILTIN_THEMES = {
 class Theme:
     """Gestiona el tema actual y carga temas personalizados."""
 
-    def __init__(self, theme_name='classic'):
+    def __init__(self, theme_name='classic', custom_card_back_path=None):
         self.current_name = theme_name
         self.data = {}
         self.custom_images = {}
+        self.custom_card_back_path = custom_card_back_path  # ruta absoluta elegida por el usuario
         self.load(theme_name)
 
     def load(self, theme_name):
@@ -125,11 +126,43 @@ class Theme:
                     except Exception:
                         pass
 
+        # Imagen de reverso personalizada por el usuario (tiene prioridad sobre la del tema)
+        self._apply_custom_card_back()
+
     def get(self, key, default=None):
         return self.data.get(key, default)
 
     def __getitem__(self, key):
         return self.data[key]
+
+    def set_custom_card_back(self, path):
+        """Aplica una imagen de reverso personalizada desde una ruta de archivo."""
+        self.custom_card_back_path = path
+        self._apply_custom_card_back()
+
+    def clear_custom_card_back(self):
+        """Elimina la imagen de reverso personalizada, vuelve al tema."""
+        self.custom_card_back_path = None
+        self.custom_images.pop('card_back', None)
+        # Recargar la imagen del tema si existe
+        theme_path = os.path.join(THEMES_DIR, self.current_name)
+        for fname in ('card_back.png', 'card_back.jpg', 'card_back.jpeg'):
+            full = os.path.join(theme_path, fname)
+            if os.path.exists(full):
+                try:
+                    self.custom_images['card_back'] = pygame.image.load(full).convert_alpha()
+                except Exception:
+                    pass
+                break
+
+    def _apply_custom_card_back(self):
+        """Carga la imagen de reverso personalizada si hay una ruta configurada."""
+        if self.custom_card_back_path and os.path.exists(self.custom_card_back_path):
+            try:
+                img = pygame.image.load(self.custom_card_back_path).convert_alpha()
+                self.custom_images['card_back'] = img
+            except Exception:
+                self.custom_card_back_path = None
 
     @staticmethod
     def available_themes():
