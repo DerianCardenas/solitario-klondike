@@ -4,6 +4,8 @@ Juego de solitario Klondike completo desarrollado en Python con Pygame.
 
 ![Python](https://img.shields.io/badge/Python-3.8+-blue) ![Pygame](https://img.shields.io/badge/Pygame-2.5+-green) ![License](https://img.shields.io/badge/License-MIT-yellow)
 
+> **💾 Descargar:** Ve a [Releases](../../releases) para descargar el paquete `.deb` compilado.
+
 ## Características
 
 - Reglas completas del solitario Klondike
@@ -136,3 +138,22 @@ solitario_game/
 ## Licencia
 
 MIT — ver [LICENSE](LICENSE).
+
+## Desarrollo
+
+### Build automático
+
+Este proyecto usa GitHub Actions para compilar automáticamente el paquete `.deb`:
+
+- **Push a main/master**: Compila y guarda como artefacto (30 días)
+- **Crear release**: Compila y adjunta el `.deb` al release automáticamente
+
+Ver [GITHUB_SETUP.md](GITHUB_SETUP.md) para instrucciones detalladas.
+
+### Contribuir
+
+1. Fork el proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/nueva-funcionalidad`)
+3. Commit tus cambios (`git commit -m 'Agregar nueva funcionalidad'`)
+4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
+5. Abre un Pull Request

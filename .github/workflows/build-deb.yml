@@ -1,0 +1,72 @@
+name: Build DEB Package
+
+on:
+  push:
+    branches: [ main, master ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main, master ]
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          python3-dev \
+          libsdl2-dev \
+          libsdl2-image-dev \
+          libsdl2-mixer-dev \
+          libsdl2-ttf-dev \
+          libfreetype6-dev \
+          libportmidi-dev \
+          libjpeg-dev \
+          dpkg-dev
+    
+    - name: Create virtual environment and install dependencies
+      run: |
+        python3 -m venv venv
+        venv/bin/pip install --upgrade pip
+        venv/bin/pip install -r requirements.txt
+        venv/bin/pip install pyinstaller
+    
+    - name: Build DEB package
+      run: |
+        chmod +x build_deb.sh
+        ./build_deb.sh
+    
+    - name: Get package name
+      id: package
+      run: |
+        PKG_NAME=$(ls *.deb | head -n 1)
+        echo "name=$PKG_NAME" >> $GITHUB_OUTPUT
+        echo "Package: $PKG_NAME"
+    
+    - name: Upload DEB as artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: solitario-klondike-deb
+        path: "*.deb"
+        retention-days: 30
+    
+    - name: Upload to Release (if tag)
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: "*.deb"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,5 +1,6 @@
 # Entorno virtual
 venv/
+env/
 
 # PyInstaller
 build/
@@ -17,11 +18,20 @@ saves/autosave.json
 __pycache__/
 *.py[cod]
 *.pyo
+*.egg-info/
 
 # Archivos del sistema
 .DS_Store
 Thumbs.db
+*.swp
+*.swo
+*~
 
 # Archivos internos de herramientas
 .abacus.donotdelete
 .claude/
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-*
