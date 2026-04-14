@@ -36,7 +36,8 @@ solitario_game/
 │   ├── game_logic.py       # Lógica del juego Klondike
 │   ├── theme.py            # Sistema de temas
 │   ├── renderer.py         # Renderizado de cartas y UI
-│   └── game_gui.py         # Interfaz gráfica principal
+│   ├── game_gui.py         # Interfaz gráfica principal
+│   └── file_browser.py     # Explorador de archivos integrado en Pygame
 ├── themes/
 │   ├── classic/            # Tema clásico
 │   ├── modern/             # Tema moderno
@@ -50,6 +51,7 @@ solitario_game/
 - `src/card.py` — Define las clases `Card` y `Deck` con toda la lógica de baraja.
 - `src/game_logic.py` — Implementa las reglas del Klondike: tableau, fundaciones, mazo, movimientos válidos, deshacer, guardar/cargar.
 - `src/game_gui.py` — Maneja eventos del ratón (drag & drop, clics, doble clic), teclado y el loop de la UI.
+- `src/file_browser.py` — Explorador de archivos integrado en Pygame para seleccionar imágenes de reverso sin depender de tkinter.
 - `src/renderer.py` — Dibuja cartas, slots, fundaciones y todos los elementos visuales.
 - `src/theme.py` — Carga y gestiona temas desde `themes/*/theme.json` e imágenes opcionales.
 - `src/constants.py` — Colores, tamaños, posiciones y configuración global.
@@ -141,14 +143,22 @@ Los iconos se cargan desde `assets/{suit}.png` (hearts, diamonds, clubs, spades)
 - Elimina los repartos con los 4 Ases enterrados (era el 2.1% de las partidas con el shuffle puro).
 - La aleatoriedad se mantiene prácticamente intacta.
 
-### Imagen de reverso personalizada (theme.py + game_gui.py)
-- Nueva tab "Reverso" en Configuración con selector de archivo nativo (tkinter).
+### Imagen de reverso personalizada (theme.py + game_gui.py + file_browser.py)
+- Nueva tab "Reverso" en Configuración con selector de archivo integrado en Pygame.
+- **Explorador de archivos propio** (`src/file_browser.py`) — no depende de tkinter, evita problemas de foco en Linux.
+  - Navegación por carpetas con clic/doble clic o teclado (↑↓, Enter).
+  - Barra de ruta editable — puedes escribir una ruta directamente.
+  - Solo muestra carpetas e imágenes (PNG, JPG, JPEG, BMP).
+  - Scrollbar lateral y soporte de rueda del ratón.
+  - Botones "Cancelar" y "Aceptar" (habilitado solo con imagen seleccionada).
+  - Clic fuera del panel cancela.
 - Soporta PNG, JPG, JPEG, BMP.
 - La ruta se persiste en `saves/config.json` como `card_back_path`.
 - `Theme.set_custom_card_back(path)` aplica la imagen con prioridad sobre la del tema.
 - `Theme.clear_custom_card_back()` vuelve al reverso del tema activo.
 - La imagen se escala automáticamente al tamaño de carta (85×125 px) en `_render_card_back()`.
 - Preview en tiempo real visible en la misma pantalla de configuración.
+- El browser usa `self.display` (ventana real) y obtiene dimensiones dinámicamente con `screen.get_size()`.
 
 ### Bug en undo (game_logic.py)
 - `undo()` sumaba `self.moves += 1` al deshacer en vez de restar. Corregido a `self.moves = max(0, self.moves - 1)`.
