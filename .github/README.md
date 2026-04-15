@@ -1,61 +1,54 @@
 # GitHub Actions Workflows
 
-Este proyecto incluye dos workflows de GitHub Actions para compilar automáticamente el paquete `.deb`:
+Este proyecto usa GitHub Actions para compilar automáticamente el paquete `.deb`.
 
-## 1. `build-deb.yml` - Build continuo
+## Workflow: `build-deb.yml`
 
-**Se ejecuta en:**
-- Push a `main` o `master`
-- Pull requests
-- Tags que empiecen con `v*` (ej: `v1.0.0`)
-- Releases
+**Se ejecuta cuando:**
+- Haces push de un tag que empiece con `v*` (ej: `v1.0.0`, `v1.2.3`)
 
 **Resultado:**
-- Sube el `.deb` como artefacto (disponible 30 días)
-- Si es un tag, también lo adjunta al release automáticamente
-
-## 2. `release.yml` - Build solo en releases
-
-**Se ejecuta en:**
-- Cuando publicas un release en GitHub
-
-**Resultado:**
-- Compila el `.deb` y lo adjunta al release
-- Agrega instrucciones de instalación automáticamente
+- Compila el paquete `.deb`
+- Crea o actualiza el release automáticamente
+- Adjunta el `.deb` al release
+- Agrega descripción con instrucciones de instalación
 
 ---
 
-## Cómo usar
+## Cómo crear un release
 
-### Opción 1: Crear un release desde GitHub
-
-1. Ve a tu repositorio en GitHub
-2. Click en "Releases" → "Create a new release"
-3. Elige un tag (ej: `v1.0.0`)
-4. Escribe título y descripción
-5. Click "Publish release"
-6. GitHub Actions compilará automáticamente el `.deb` y lo adjuntará al release
-
-### Opción 2: Crear un release desde la terminal
+### Método 1: Desde la terminal (recomendado)
 
 ```bash
-# Crear y push del tag
+# 1. Asegúrate de que todos los cambios estén commiteados
+git add .
+git commit -m "Preparar release v1.0.0"
+git push
+
+# 2. Crear y push del tag
 git tag v1.0.0
 git push origin v1.0.0
 
-# Luego ve a GitHub y crea el release desde el tag
+# 3. GitHub Actions compilará automáticamente y creará el release
 ```
 
-### Opción 3: Usar GitHub CLI
+### Método 2: Desde GitHub web
+
+1. Ve a tu repositorio en GitHub
+2. Click en "Releases" → "Create a new release"
+3. Click en "Choose a tag" → Escribe `v1.0.0` → "Create new tag: v1.0.0 on publish"
+4. Título: `Solitario Klondike v1.0.0`
+5. Click "Publish release"
+6. GitHub Actions detectará el tag y compilará el `.deb` automáticamente
+
+### Método 3: Con GitHub CLI
 
 ```bash
-# Instalar gh si no lo tienes
-# sudo apt install gh
-
-# Crear release
+# Crear tag y release en un solo comando
 gh release create v1.0.0 \
   --title "Solitario Klondike v1.0.0" \
-  --notes "Primera versión estable"
+  --notes "Primera versión estable" \
+  --generate-notes
 
 # GitHub Actions compilará y subirá el .deb automáticamente
 ```
@@ -65,27 +58,75 @@ gh release create v1.0.0 \
 ## Ver el progreso
 
 1. Ve a la pestaña "Actions" en tu repositorio
-2. Verás los workflows ejecutándose
-3. Click en uno para ver los logs en tiempo real
-4. Cuando termine, el `.deb` estará disponible en:
-   - **Artifacts** (si es push normal)
-   - **Release assets** (si es un release o tag)
+2. Verás el workflow "Build DEB Package" ejecutándose
+3. Click en él para ver los logs en tiempo real
+4. Cuando termine (3-5 minutos), el `.deb` estará en el release
 
 ---
 
-## Descargar artefactos manualmente
+## Actualizar un release existente
 
-Si quieres descargar el `.deb` de un build sin crear un release:
+Si ya tienes un release y quieres recompilar el `.deb`:
 
-1. Ve a "Actions" → Click en el workflow completado
-2. Scroll hasta "Artifacts"
-3. Click en "solitario-klondike-deb" para descargar
+```bash
+# Eliminar el tag local y remoto
+git tag -d v1.0.0
+git push origin --delete v1.0.0
+
+# Crear el tag de nuevo
+git tag v1.0.0
+git push origin v1.0.0
+
+# GitHub Actions recompilará y actualizará el release
+```
 
 ---
 
-## Notas
+## Solución de problemas
 
-- El build tarda aproximadamente 3-5 minutos
-- Requiere que el repositorio sea público o tengas GitHub Actions habilitado
-- Los artefactos se guardan por 30 días
-- Los releases son permanentes
+### El workflow no se ejecuta
+
+- Verifica que el tag empiece con `v` (ej: `v1.0.0`, no `1.0.0`)
+- Asegúrate de hacer `git push origin v1.0.0` (no solo `git push`)
+
+### El workflow falla
+
+1. Ve a "Actions" → Click en el workflow fallido
+2. Lee los logs para ver qué falló
+3. Problemas comunes:
+   - Falta alguna dependencia en `requirements.txt`
+   - Error en `build_deb.sh`
+   - Permisos incorrectos (ya configurados en el workflow)
+
+### El .deb no aparece en el release
+
+- Espera a que el workflow termine (3-5 minutos)
+- Verifica que el workflow tenga un ✅ verde en "Actions"
+- Si falló, revisa los logs
+
+### Error de permisos
+
+El workflow ya tiene `permissions: contents: write` configurado. Si aún así falla:
+
+1. Ve a Settings → Actions → General
+2. En "Workflow permissions", selecciona "Read and write permissions"
+3. Guarda y vuelve a ejecutar el workflow
+
+---
+
+## Versionado semántico
+
+Usa [Semantic Versioning](https://semver.org/):
+
+- `v1.0.0` - Primera versión estable
+- `v1.0.1` - Parche (bug fixes)
+- `v1.1.0` - Minor (nuevas características compatibles)
+- `v2.0.0` - Major (cambios incompatibles)
+
+Ejemplos:
+```bash
+git tag v1.0.1  # Bug fix
+git tag v1.1.0  # Nueva característica
+git tag v2.0.0  # Cambio mayor
+git push origin --tags  # Push todos los tags
+```
