@@ -96,7 +96,6 @@ Las partidas se guardan automáticamente en `saves/autosave.json`. La configurac
 ## Empaquetar como .deb
 
 ```bash
-# Desde la carpeta solitario_game/
 python3 -m venv venv
 venv/bin/pip install -r requirements.txt
 chmod +x build_deb.sh
